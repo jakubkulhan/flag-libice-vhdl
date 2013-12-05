@@ -1,0 +1,57 @@
+#!/usr/bin/env php
+<?php
+
+$address = 0;
+$hex = "";
+
+function phex($num, $length) {
+	return str_pad(dechex($num), $length, "0", STR_PAD_LEFT);
+}
+
+function writeHex(&$hex, &$address, $data, $dataLength) {
+	$hex .= strtoupper(":" . phex($dataLength, 2) . phex($address, 4) . phex(0, 2) . phex($data, 4) . phex((((((($data & 0xFF00) >> 8) + ($data & 0xFF) + $dataLength + (($address & 0xFF00) >> 8) + ($address & 0xFF)) & 0xFF) ^ 0xFF) + 0x01) & 0xFF, 2) . "\r\n");
+	$address += $dataLength;
+}
+
+foreach (array_map(function ($line) { return preg_split("/\\s+/", strtolower($line)); }, array_filter(preg_split("/\\r?\\n/", preg_replace("/(--|#|;).+$/m", "", file_get_contents("php://stdin"))), function ($line) { return !empty($line); })) as $args) {
+	$instr = array_shift($args);
+	switch ($instr) {
+		case 'nop':
+			writeHex($hex, $address, 0x0000, 2);
+			break;
+
+		case 'dir':
+			writeHex($hex, $address, 0x0100 | (!!$args[0] ? 0x01 : 0x00), 2);
+			break;
+
+		case 'ldspeed':
+			writeHex($hex, $address, 0x0200 | (((intval($args[0]) & 0xF) << 4) | (intval($args[1]) & 0xF)), 2);
+			break;
+
+		case 'waitvs':
+			writeHex($hex, $address, 0x0300 | (intval($args[0]) & 0xFF), 2);
+			break;
+
+		case 'waitlim':
+			writeHex($hex, $address, 0x0400 | (((intval($args[0]) & 0xF) << 4) | (intval($args[1]) & 0xF)), 2);
+			break;
+
+		case 'stop':
+			writeHex($hex, $address, 0x0500, 2);
+			break;
+
+		case 'restart':
+			writeHex($hex, $address, 0x0600, 2);
+			break;
+	}
+}
+
+writeHex($hex, $address, 0x0500, 2);
+
+while ($address < 0x100) {
+	writeHex($hex, $address, 0x0000, 2);
+}
+
+$hex .= ":00000001FF\r\n";
+
+echo $hex;

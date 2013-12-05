@@ -1,0 +1,48 @@
+;
+; position controller program
+;
+;    dir <direction>
+;
+;        <direction>  0 means downright, 1 upleft
+;
+;
+;    ldspeed <xspeed> <yspeed>
+;
+;        <xspeed>  number from 0 to 15, speed of horizontal move
+;
+;        <yspeed>  number from 0 to 15, speed of vertical move
+;
+;
+;    waitlim <xbounce> <ybounce>
+;
+;        <xbounce>  number from 0 to 15, count of horizontal bounces before the next instruction is processed
+;
+;        <ybounce>  number from 0 to 15, count of vertical bounces before the next instruction is processed
+;
+;
+;    waitvs <n>
+;
+;        <n>  number from 0 to 255, count of VS pulses before the next instruction is processed
+;
+;
+;    stop
+;
+;        do not execute any more code; stop is automatically inserted at end of your code
+;
+;
+;    restart
+;
+;        restart IP to 0, i.e. start again
+
+
+; simple program
+
+dir 0
+ldspeed 2 10
+waitvs 128
+ldspeed 10 2
+waitlim 2 0
+ldspeed 5 5
+waitlim 2 2
+ldspeed 0 0
+restart
